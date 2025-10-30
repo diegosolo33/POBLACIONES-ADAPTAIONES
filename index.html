@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adaptaciones Humanas por Región</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+        .region-circle {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .region-circle:hover {
+            opacity: 1 !important;
+        }
+        .region-circle.answered {
+            cursor: not-allowed;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .option-button {
+            transition: all 0.2s ease;
+        }
+        .option-button:hover:not(:disabled) {
+            border-color: #3B82F6;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-sky-100 to-blue-100 min-h-screen">
+    <div class="p-4 md:p-8">
+        <div class="max-w-7xl mx-auto">
+            <!-- Header -->
+            <div class="text-center mb-6">
+                <div class="flex items-center justify-center gap-3 mb-3">
+                    <svg class="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <h1 class="text-3xl md:text-4xl font-bold text-gray-800">
+                        Adaptaciones Humanas por Región
+                    </h1>
+                </div>
+                <p class="text-gray-600 text-base md:text-lg">
+                    Haz clic en cada región del mapa para conocer las adaptaciones de Homo sapiens
+                </p>
+            </div>
+
+            <!-- Game Container -->
+            <div class="bg-white rounded-lg shadow-xl p-4 md:p-6 mb-6">
+                <!-- Score Bar -->
+                <div class="flex flex-col md:flex-row items-center justify-between mb-4 gap-3">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-6 h-6 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"></path>
+                        </svg>
+                        <span class="text-xl font-semibold">
+                            Puntuación: <span id="score">0</span> / <span id="answered">0</span>
+                        </span>
+                    </div>
+                    <button onclick="resetGame()" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">
+                        Reiniciar
+                    </button>
+                </div>
+
+                <!-- Map Container -->
+                <div class="relative bg-gradient-to-b from-sky-200 via-sky-100 to-blue-50 rounded-lg overflow-hidden border-4 border-blue-200" style="height: 500px;">
+                    <svg id="worldMap" width="100%" height="100%" viewBox="0 0 1000 500" preserveAspectRatio="xMidYMid meet">
+                        <!-- Ocean Background -->
+                        <rect width="1000" height="500" fill="#E0F2FE" />
+                        
+                        <!-- Africa -->
+                        <path d="M 480 180 L 520 175 L 545 185 L 555 210 L 565 240 L 570 270 L 565 310 L 555 350 L 540 380 L 520 400 L 490 410 L 470 405 L 455 390 L 445 360 L 440 320 L 445 280 L 455 240 L 465 210 L 475 190 Z" fill="#D4A574" stroke="#8B6F47" stroke-width="2"/>
+                        
+                        <!-- Europe -->
+                        <path d="M 480 120 L 520 115 L 540 125 L 545 145 L 540 165 L 520 175 L 500 170 L 485 155 L 480 135 Z" fill="#C4B5A0" stroke="#8B6F47" stroke-width="2"/>
+                        
+                        <!-- Asia -->
+                        <path d="M 545 130 L 590 125 L 650 130 L 720 140 L 780 155 L 820 170 L 840 190 L 845 215 L 840 245 L 820 270 L 780 285 L 730 290 L 680 285 L 640 270 L 610 250 L 590 220 L 575 185 L 560 155 L 545 135 Z" fill="#D4C5A0" stroke="#8B6F47" stroke-width="2"/>
+                        
+                        <!-- North America -->
+                        <path d="M 150 100 L 200 95 L 250 100 L 290 115 L 310 140 L 320 175 L 315 210 L 300 240 L 270 260 L 230 265 L 190 255 L 160 235 L 140 200 L 135 160 L 145 125 Z" fill="#C4B595" stroke="#8B6F47" stroke-width="2"/>
+                        
+                        <!-- South America -->
+                        <path d="M 260 270 L 290 265 L 310 280 L 320 310 L 325 350 L 320 390 L 305 425 L 285 445 L 265 450 L 245 445 L 230 425 L 220 390 L 225 350 L 235 310 L 250 285 Z" fill="#C4B590" stroke="#8B6F47" stroke-width="2"/>
+                        
+                        <!-- Australia -->
+                        <path d="M 760 340 L 810 335 L 850 345 L 870 370 L 865 400 L 845 420 L 810 425 L 775 420 L 750 400 L 745 370 L 755 350 Z" fill="#D4C5A5" stroke="#8B6F47" stroke-width="2"/>
+                        
+                        <!-- Greenland -->
+                        <path d="M 380 40 L 420 38 L 445 45 L 455 65 L 450 85 L 430 95 L 400 93 L 375 80 L 370 60 Z" fill="#E8E8E8" stroke="#8B6F47" stroke-width="2"/>
+
+                        <!-- Interactive regions will be inserted here by JavaScript -->
+                        <g id="regionsContainer"></g>
+                    </svg>
+                </div>
+
+                <!-- Region List -->
+                <div id="regionList" class="mt-6 grid grid-cols-2 md:grid-cols-3 gap-3"></div>
+            </div>
+
+            <!-- Completion Message -->
+            <div id="completionMessage" class="hidden bg-gradient-to-r from-yellow-50 via-yellow-100 to-yellow-50 p-6 rounded-lg shadow-xl text-center border-4 border-yellow-300">
+                <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
+                    ¡Completaste todas las regiones! 🎉
+                </h2>
+                <p class="text-xl text-gray-700 mb-3">
+                    Puntuación final: <span id="finalScore">0</span> / <span id="totalRegions">6</span>
+                </p>
+                <p id="completionText" class="text-gray-600"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="modal" class="modal">
+        <div class="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <h2 id="modalTitle" class="text-2xl md:text-3xl font-bold text-gray-800 mb-2"></h2>
+                        <p id="modalDescription" class="text-gray-600"></p>
+                    </div>
+                    <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700 transition">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-lg mb-6 border-2 border-blue-200">
+                    <h3 id="modalQuestion" class="font-semibold text-lg mb-3 text-gray-800"></h3>
+                    <div id="optionsContainer" class="space-y-2"></div>
+                </div>
+
+                <div id="submitContainer">
+                    <button onclick="submitAnswer()" id="submitButton" disabled class="w-full py-3 rounded-lg font-semibold transition-all bg-gray-300 text-gray-500 cursor-not-allowed">
+                        Verificar Respuesta
+                    </button>
+                </div>
+
+                <div id="resultContainer" class="hidden space-y-4">
+                    <div id="resultBox" class="p-4 rounded-lg border-2">
+                        <p id="resultTitle" class="font-semibold text-lg mb-2"></p>
+                        <p id="resultExplanation" class="text-gray-700 text-sm md:text-base"></p>
+                    </div>
+                    <button onclick="closeModal()" class="w-full py-3 bg-gray-600 text-white rounded-lg font-semibold hover:bg-gray-700 transition-all shadow-md hover:shadow-lg">
+                        Continuar Explorando
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const regions = [
+            {
+                id: 'inuit',
+                name: 'Ártico - Inuits',
+                x: 220,
+                y: 80,
+                color: '#60A5FA',
+                image: '❄️',
+                description: 'Poblaciones del Ártico (Groenlandia, norte de Canadá, Alaska)',
+                question: '¿Cuál es una adaptación característica de los Inuits al frío extremo?',
+                options: [
+                    'Mayor superficie corporal para disipar calor',
+                    'Metabolismo basal elevado y cuerpos compactos para retener calor',
+                    'Piel muy oscura para protección solar',
+                    'Menor capacidad pulmonar'
+                ],
+                correct: 1,
+                explanation: 'Los Inuits tienen metabolismo basal 15-30% más alto que otras poblaciones, cuerpos compactos (regla de Allen) y extremidades cortas para minimizar pérdida de calor. También tienen adaptaciones en la dieta alta en grasas omega-3.'
+            },
+            {
+                id: 'tuareg',
+                name: 'Sahara - Tuareg',
+                x: 480,
+                y: 220,
+                color: '#F59E0B',
+                image: '🏜️',
+                description: 'Poblaciones del desierto del Sahara (Norte de África)',
+                question: '¿Qué adaptación ayuda a los Tuareg a sobrevivir en el calor extremo del desierto?',
+                options: [
+                    'Producción aumentada de melanina y cuerpos alargados para disipar calor',
+                    'Metabolismo muy lento',
+                    'Incapacidad de sudar',
+                    'Piel muy clara para reflejar el sol'
+                ],
+                correct: 0,
+                explanation: 'Los Tuareg y otras poblaciones saharianas tienen cuerpos alargados y extremidades largas (regla de Allen) que aumentan la superficie para disipar calor. La piel oscura protege contra la radiación UV intensa.'
+            },
+            {
+                id: 'andean',
+                name: 'Andes - Quechuas/Aymaras',
+                x: 280,
+                y: 350,
+                color: '#8B5CF6',
+                image: '⛰️',
+                description: 'Poblaciones de los Andes (Perú, Bolivia, Ecuador)',
+                question: '¿Cuál es la principal adaptación de las poblaciones andinas a la altura?',
+                options: [
+                    'Menor cantidad de glóbulos rojos',
+                    'Mayor capacidad pulmonar y más hemoglobina con alta afinidad por O₂',
+                    'Metabolismo más lento',
+                    'Menor volumen cardíaco'
+                ],
+                correct: 1,
+                explanation: 'Las poblaciones andinas tienen tórax en forma de barril con mayor capacidad pulmonar, más glóbulos rojos, hemoglobina con mayor afinidad por oxígeno y corazones más grandes. Pueden vivir confortablemente a 4000+ metros.'
+            },
+            {
+                id: 'tibetan',
+                name: 'Himalaya - Tibetanos',
+                x: 680,
+                y: 210,
+                color: '#EC4899',
+                image: '🏔️',
+                description: 'Poblaciones del Tíbet y Himalaya',
+                question: '¿En qué se diferencia la adaptación tibetana a la altura de la andina?',
+                options: [
+                    'No tienen ninguna adaptación especial',
+                    'Mayor producción de glóbulos rojos como los andinos',
+                    'Mayor flujo sanguíneo y óxido nítrico sin exceso de glóbulos rojos',
+                    'Menor tamaño pulmonar'
+                ],
+                correct: 2,
+                explanation: 'Los tibetanos tienen una adaptación única: NO aumentan excesivamente los glóbulos rojos (evitando problemas cardiovasculares). En cambio, tienen mayor flujo sanguíneo, más óxido nítrico vasodilatador y respiran más rápido. Esta es una adaptación genética diferente a los andinos.'
+            },
+            {
+                id: 'african',
+                name: 'África Ecuatorial',
+                x: 500,
+                y: 290,
+                color: '#10B981',
+                image: '🌍',
+                description: 'Poblaciones originarias del África subsahariana',
+                question: '¿Por qué las poblaciones del África ecuatorial tienen piel oscura?',
+                options: [
+                    'Solo por razones estéticas',
+                    'Alta concentración de melanina que protege contra radiación UV y previene degradación de folato',
+                    'Para absorber más calor',
+                    'Para camuflarse en la selva'
+                ],
+                correct: 1,
+                explanation: 'La piel oscura contiene alta melanina que protege contra la intensa radiación UV ecuatorial. Esto previene quemaduras, cáncer de piel y especialmente la degradación del folato (vitamina B9), crítico para el desarrollo fetal y producción de ADN.'
+            },
+            {
+                id: 'nordic',
+                name: 'Escandinavia - Nórdicos',
+                x: 510,
+                y: 90,
+                color: '#3B82F6',
+                image: '🌨️',
+                description: 'Poblaciones del norte de Europa',
+                question: '¿Por qué las poblaciones nórdicas desarrollaron piel clara?',
+                options: [
+                    'Para mimetizarse con la nieve',
+                    'Para sintetizar vitamina D con baja exposición solar',
+                    'Por falta de alimentos',
+                    'Para perder más calor'
+                ],
+                correct: 1,
+                explanation: 'En latitudes altas con poca radiación UV, la piel clara permite sintetizar vitamina D eficientemente incluso con baja exposición solar. La vitamina D es crucial para absorción de calcio y salud ósea. Esta adaptación ocurrió hace ~8000 años.'
+            }
+        ];
+
+        let gameState = {
+            score: 0,
+            answeredRegions: [],
+            selectedRegion: null,
+            selectedAnswer: null
+        };
+
+        function init() {
+            renderRegions();
+            renderRegionList();
+            updateScore();
+        }
+
+        function renderRegions() {
+            const container = document.getElementById('regionsContainer');
+            container.innerHTML = '';
+
+            regions.forEach(region => {
+                const isAnswered = gameState.answeredRegions.includes(region.id);
+                
+                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                
+                // Circle
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', region.x);
+                circle.setAttribute('cy', region.y);
+                circle.setAttribute('r', '40');
+                circle.setAttribute('fill', isAnswered ? '#9CA3AF' : region.color);
+                circle.setAttribute('opacity', isAnswered ? '0.6' : '0.85');
+                circle.setAttribute('stroke', 'white');
+                circle.setAttribute('stroke-width', '4');
+                circle.classList.add('region-circle');
+                if (isAnswered) circle.classList.add('answered');
+                circle.style.filter = isAnswered ? 'none' : 'drop-shadow(0 4px 6px rgba(0,0,0,0.3))';
+                if (!isAnswered) {
+                    circle.onclick = () => openModal(region);
+                }
+                
+                // Emoji
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', region.x);
+                text.setAttribute('y', region.y + 12);
+                text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('font-size', '32');
+                text.style.userSelect = 'none';
+                text.style.pointerEvents = 'none';
+                text.textContent = region.image;
+                
+                // Checkmark
+                if (isAnswered) {
+                    const check = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    check.setAttribute('x', region.x + 30);
+                    check.setAttribute('y', region.y - 30);
+                    check.setAttribute('font-size', '28');
+                    check.setAttribute('fill', '#22C55E');
+                    check.textContent = '✓';
+                    g.appendChild(check);
+                }
+                
+                // Label
+                const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                label.setAttribute('x', region.x);
+                label.setAttribute('y', region.y + 60);
+                label.setAttribute('text-anchor', 'middle');
+                label.setAttribute('font-size', '14');
+                label.setAttribute('font-weight', 'bold');
+                label.setAttribute('fill', '#1F2937');
+                label.style.userSelect = 'none';
+                label.style.pointerEvents = 'none';
+                label.textContent = region.name.split(' - ')[1];
+                
+                g.appendChild(circle);
+                g.appendChild(text);
+                g.appendChild(label);
+                container.appendChild(g);
+            });
+        }
+
+        function renderRegionList() {
+            const list = document.getElementById('regionList');
+            list.innerHTML = '';
+
+            regions.forEach(region => {
+                const isAnswered = gameState.answeredRegions.includes(region.id);
+                const div = document.createElement('div');
+                div.className = `p-3 rounded-lg border-2 transition-all ${
+                    isAnswered
+                        ? 'bg-gray-100 border-gray-300'
+                        : 'bg-white border-gray-200 hover:border-blue-400 hover:shadow-md cursor-pointer'
+                }`;
+                
+                if (!isAnswered) {
+                    div.onclick = () => openModal(region);
+                }
+                
+                div.innerHTML = `
+                    <span class="text-2xl mr-2">${region.image}</span>
+                    <span class="text-sm md:text-base ${isAnswered ? 'text-gray-500' : 'text-gray-700'}">
+                        ${region.name}
+                    </span>
+                    ${isAnswered ? '<span class="ml-2 text-green-600 font-bold">✓</span>' : ''}
+                `;
+                
+                list.appendChild(div);
+            });
+        }
+
+        function openModal(region) {
+            if (gameState.answeredRegions.includes(region.id)) return;
+            
+            gameState.selectedRegion = region;
+            gameState.selectedAnswer = null;
+            
+            document.getElementById('modalTitle').textContent = `${region.image} ${region.name}`;
+            document.getElementById('modalDescription').textContent = region.description;
+            document.getElementById('modalQuestion').textContent = region.question;
+            
+            const optionsContainer = document.getElementById('optionsContainer');
+            optionsContainer.innerHTML = '';
+            
+            region.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.className = 'option-button w-full p-3 text-left rounded-lg border-2 bg-white border-gray-300';
+                button.textContent = option;
+                button.onclick = () => selectAnswer(index);
+                optionsContainer.appendChild(button);
+            });
+            
+            document.getElementById('submitContainer').classList.remove('hidden');
+            document.getElementById('resultContainer').classList.add('hidden');
+            document.getElementById('submitButton').disabled = true;
+            document.getElementById('submitButton').className = 'w-full py-3 rounded-lg font-semibold transition-all bg-gray-300 text-gray-500 cursor-not-allowed';
+            
+            document.getElementById('modal').classList.add('active');
+        }
+
+        function selectAnswer(index) {
+            gameState.selectedAnswer = index;
+            
+            const buttons = document.querySelectorAll('.option-button');
+            buttons.forEach((btn, i) => {
+                if (i === index) {
+                    btn.className = 'option-button w-full p-3 text-left rounded-lg border-2 bg-blue-100 border-blue-500 shadow-md';
+                } else {
+                    btn.className = 'option-button w-full p-3 text-left rounded-lg border-2 bg-white border-gray-300';
+                }
+            });
+            
+            const submitButton = document.getElementById('submitButton');
+            submitButton.disabled = false;
+            submitButton.className = 'w-full py-3 rounded-lg font-semibold transition-all bg-blue-500 text-white hover:bg-blue-600 shadow-md hover:shadow-lg';
+        }
+
+        function submitAnswer() {
+            const region = gameState.selectedRegion;
+            const isCorrect = gameState.selectedAnswer === region.correct;
+            
+            if (isCorrect) {
+                gameState.score++;
+            }
+            
+            gameState.answeredRegions.push(region.id);
+            
+            const buttons = document.querySelectorAll('.option-button');
+            buttons.forEach((btn, i) => {
+                btn.disabled = true;
+                if (i === region.correct) {
+                    btn.className = 'option-button w-full p-3 text-left rounded-lg border-2 bg-green-100 border-green-500 font-semibold';
+                    btn.innerHTML = `
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm md:text-base">${region.options[i]}</span>
+                            <svg class="w-5 h-5 text-green-600 flex-shrink-0 ml-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                    `;
+                } else if (i === gameState.selectedAnswer) {
+                    btn.className = 'option-button w-full p-3 text-left rounded-lg border-2 bg-red-100 border-red-500';
+                    btn.innerHTML = `
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm md:text-base">${region.options[i]}</span>
+                            <svg class="w-5 h-5 text-red-600 flex-shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </div>
+                    `;
+                } else {
+                    btn.className = 'option-button w-full p-3 text-left rounded-lg border-2 bg-gray-50 border-gray-200';
+                }
+            });
+            
+            document.getElementById('submitContainer').classList.add('hidden');
+            document.getElementById('resultContainer').classList.remove('hidden');
+            
+            const resultBox = document.getElementById('resultBox');
+            const resultTitle = document.getElementById('resultTitle');
+            const resultExplanation = document.getElementById('resultExplanation');
+            
+            if (isCorrect) {
+                resultBox.className = 'p-4 rounded-lg border-2 bg-green-50 border-green-500';
+                resultTitle.textContent = '¡Correcto! 🎉';
+            } else {
+                resultBox.className = 'p-4 rounded-lg border-2 bg-red-50 border-red-500';
+                resultTitle.textContent = 'Incorrecto ❌';
+            }
+            
+            resultExplanation.textContent = region.explanation;
+            
+            updateScore();
+            renderRegions();
+            renderRegionList();
+            
+            if (gameState.answeredRegions.length === regions.length) {
+                showCompletionMessage();
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+            gameState.selectedRegion = null;
+            gameState.selectedAnswer = null;
+        }
+
+        function updateScore() {
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('answered').textContent = gameState.answeredRegions.length;
+        }
+
+        function showCompletionMessage() {
+            const message = document.getElementById('completionMessage');
+            document.getElementById('finalScore').textContent = gameState.score;
+            document.getElementById('totalRegions').textContent = regions.length;
+            
+            const text = gameState.score === regions.length
+                ? '¡Perfecto! Conoces muy bien las adaptaciones humanas 🌍'
+                : 'Buen trabajo explorando las adaptaciones de nuestra especie 👏';
+            
+            document.getElementById('completionText').textContent = text;
+            message.classList.remove('hidden');
+        }
+
+        function resetGame() {
+            gameState = {
+                score: 0,
+                answeredRegions: [],
+                selectedRegion: null,
+                selectedAnswer: null
+            };
+            
+            document.getElementById('completionMessage').classList.add('hidden');
+            closeModal();
+            updateScore();
+            renderRegions();
+            renderRegionList();
+        }
+
+        // Initialize on load
+        window.onload = init;
+    </script>
+</body>
+</html>
